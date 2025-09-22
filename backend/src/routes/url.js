@@ -18,4 +18,29 @@ router.post("/shorten", async (req, res) => {
     res.json({ shortCode: newUrl.shortCode });
 });
 
+// Get all URLs with their statistics
+router.get("/stats", async (req, res) => {
+    try {
+        const urls = await prisma.url.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(urls);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch URL statistics" });
+    }
+});
+
+// Get specific URL statistics
+router.get("/stats/:shortCode", async (req, res) => {
+    try {
+        const url = await prisma.url.findUnique({
+            where: { shortCode: req.params.shortCode }
+        });
+        if (!url) return res.status(404).json({ error: "URL not found" });
+        res.json(url);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch URL statistics" });
+    }
+});
+
 export default router;

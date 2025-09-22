@@ -11,47 +11,189 @@
       flex-direction: column;
       align-items: center;
     }
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
     form {
       display: flex;
       gap: 10px;
+      margin-bottom: 30px;
     }
     input, button {
       padding: 10px;
       font-size: 16px;
     }
+    input[type="url"] {
+      flex: 1;
+      min-width: 300px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
     #result {
-      margin-top: 20px;
+      margin-bottom: 30px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      display: none;
+    }
+    .stats-container {
+      width: 100%;
+    }
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .refresh-btn {
+      background-color: #28a745;
+      padding: 8px 15px;
+      font-size: 14px;
+    }
+    .refresh-btn:hover {
+      background-color: #218838;
+    }
+    .url-item {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .url-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .url-stats {
+      font-size: 14px;
+      color: #6c757d;
+    }
+    .click-count {
+      background-color: #007bff;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .short-url {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .short-url:hover {
+      text-decoration: underline;
+    }
+    .long-url {
+      word-break: break-all;
+      color: #6c757d;
+      font-size: 14px;
+    }
+    .created-at {
+      font-size: 12px;
+      color: #868e96;
     }
     a {
-      color: blue;
+      color: #007bff;
     }
   </style>
 </head>
 <body>
-  <h1>URL Shortener</h1>
-  <form id="urlForm">
-    <input type="url" id="longUrl" placeholder="Enter long URL" required />
-    <button type="submit">Shorten</button>
-  </form>
-  <div id="result"></div>
+  <div class="container">
+    <h1>URL Shortener</h1>
+    <form id="urlForm">
+      <input type="url" id="longUrl" placeholder="Enter long URL" required />
+      <button type="submit">Shorten</button>
+    </form>
+    <div id="result"></div>
+    
+    <div class="stats-container">
+      <div class="stats-header">
+        <h2>URL Statistics</h2>
+        <button class="refresh-btn" onclick="loadStats()">Refresh</button>
+      </div>
+      <div id="urlStats"></div>
+    </div>
+  </div>
 
   <script>
+    // Load stats when page loads
+    window.addEventListener('load', loadStats);
+
     document.getElementById("urlForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const longUrl = document.getElementById("longUrl").value;
 
-      const res = await fetch("http://localhost:5000/api/url/shorten", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ longUrl }),
-      });
+      try {
+        const res = await fetch("http://localhost:5000/api/url/shorten", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ longUrl }),
+        });
 
-      const data = await res.json();
-      document.getElementById("result").innerHTML = `
-        Shortened URL: <a href="http://localhost:5000/${data.shortCode}" target="_blank">
-        http://localhost:5000/${data.shortCode}</a>
-      `;
+        const data = await res.json();
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = `
+          <strong>Shortened URL:</strong> 
+          <a href="http://localhost:5000/${data.shortCode}" target="_blank" class="short-url">
+            http://localhost:5000/${data.shortCode}
+          </a>
+        `;
+        resultDiv.style.display = 'block';
+        
+        // Clear the input and reload stats
+        document.getElementById("longUrl").value = '';
+        setTimeout(loadStats, 500); // Small delay to ensure database is updated
+      } catch (error) {
+        console.error('Error shortening URL:', error);
+        document.getElementById("result").innerHTML = '<strong style="color: red;">Error shortening URL</strong>';
+        document.getElementById("result").style.display = 'block';
+      }
     });
+
+    async function loadStats() {
+      try {
+        const res = await fetch("http://localhost:5000/api/url/stats");
+        const urls = await res.json();
+        
+        const statsDiv = document.getElementById("urlStats");
+        
+        if (urls.length === 0) {
+          statsDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">No URLs found. Create your first shortened URL!</p>';
+          return;
+        }
+        
+        const statsHtml = urls.map(url => `
+          <div class="url-item">
+            <div class="url-header">
+              <a href="http://localhost:5000/${url.shortCode}" target="_blank" class="short-url">
+                http://localhost:5000/${url.shortCode}
+              </a>
+              <span class="click-count">${url.clicks} clicks</span>
+            </div>
+            <div class="long-url">${url.longUrl}</div>
+            <div class="created-at">Created: ${new Date(url.createdAt).toLocaleString()}</div>
+          </div>
+        `).join('');
+        
+        statsDiv.innerHTML = statsHtml;
+      } catch (error) {
+        console.error('Error loading stats:', error);
+        document.getElementById("urlStats").innerHTML = '<p style="color: red;">Error loading statistics</p>';
+      }
+    }
   </script>
 </body>
 </html>

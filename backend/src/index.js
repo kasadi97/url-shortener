@@ -22,6 +22,13 @@ app.get("/:code", async (req, res) => {
     const prisma = new PrismaClient();
     const url = await prisma.url.findUnique({ where: { shortCode: req.params.code }});
     if (!url) return res.status(404).send("URL not found");
+    
+    // Increment click count
+    await prisma.url.update({
+        where: { shortCode: req.params.code },
+        data: { clicks: { increment: 1 } }
+    });
+    
     res.redirect(url.longUrl);
 });
 
