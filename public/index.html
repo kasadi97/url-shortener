@@ -145,13 +145,13 @@
                 ${window.location.origin}/${data.shortCode}
               </a>
               <p style="margin-top: 15px; font-size: 14px; color: #6c757d;">
-                Click the link to test it, or copy and share it anywhere!
+                ${data.existing ? 'This URL was already shortened.' : 'Click the link to test it, or copy and share it anywhere!'}
               </p>
             </div>
           `;
           resultDiv.className = '';
         } else {
-          resultDiv.innerHTML = `<strong>Error:</strong> ${data.error || 'Failed to shorten URL'}`;
+          resultDiv.innerHTML = `<strong>Error:</strong> ${data.message || 'Failed to shorten URL'}`;
           resultDiv.className = 'error';
         }
         

@@ -249,14 +249,22 @@
         loadingDiv.innerHTML = '<div class="loading">Loading statistics...</div>';
         
         const res = await fetch("/api/url/stats");
-        const urls = await res.json();
+        const response = await res.json();
         
         if (!res.ok) {
-          throw new Error(urls.error || 'Failed to fetch statistics');
+          throw new Error(response.message || 'Failed to fetch statistics');
         }
         
+        // Handle new API response format
+        const urls = response.data || response; // Backwards compatibility
+        const summary = response.summary;
+        
         // Update summary stats
-        updateSummaryStats(urls);
+        if (summary) {
+          updateSummaryStats(summary);
+        } else {
+          updateSummaryStats(urls);
+        }
         
         // Update URLs list
         updateUrlsList(urls);
@@ -273,10 +281,20 @@
       }
     }
 
-    function updateSummaryStats(urls) {
-      const totalUrls = urls.length;
-      const totalClicks = urls.reduce((sum, url) => sum + url.clicks, 0);
-      const avgClicks = totalUrls > 0 ? (totalClicks / totalUrls).toFixed(1) : 0;
+    function updateSummaryStats(data) {
+      let totalUrls, totalClicks, avgClicks;
+      
+      if (data.totalUrls !== undefined) {
+        // New API format with summary
+        totalUrls = data.totalUrls;
+        totalClicks = data.totalClicks;
+        avgClicks = data.averageClicks?.toFixed(1) || '0.0';
+      } else {
+        // Backwards compatibility - calculate from array
+        totalUrls = data.length;
+        totalClicks = data.reduce((sum, url) => sum + url.clicks, 0);
+        avgClicks = totalUrls > 0 ? (totalClicks / totalUrls).toFixed(1) : '0.0';
+      }
       
       document.getElementById("totalUrls").textContent = totalUrls.toLocaleString();
       document.getElementById("totalClicks").textContent = totalClicks.toLocaleString();
