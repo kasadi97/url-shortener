@@ -17,6 +17,11 @@ app.use("/api/url", urlRoutes);
 // Serve static frontend
 app.use(express.static(path.join(__dirname, "../../public")));
 
+// Serve stats page
+app.get("/stats", (req, res) => {
+    res.sendFile(path.join(__dirname, "../../public/stats.html"));
+});
+
 app.get("/:code", async (req, res) => {
     const { PrismaClient } = await import("@prisma/client");
     const prisma = new PrismaClient();
