@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>URL Statistics - URL Shortener</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background-color: #f8f9fa;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .header {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .header h1 {
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+    .header p {
+      color: #6c757d;
+      margin: 0;
+    }
+    .nav-links {
+      margin-top: 1rem;
+    }
+    .nav-link {
+      display: inline-block;
+      margin: 0 10px;
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .nav-link:hover {
+      background-color: #0056b3;
+      text-decoration: none;
+      color: white;
+    }
+    .nav-link.secondary {
+      background-color: #6c757d;
+    }
+    .nav-link.secondary:hover {
+      background-color: #5a6268;
+    }
+    .stats-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid #dee2e6;
+      background-color: #f8f9fa;
+    }
+    .stats-header h2 {
+      margin: 0;
+      color: #333;
+    }
+    .refresh-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .refresh-btn:hover {
+      background-color: #218838;
+    }
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      padding: 1.5rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .stat-card {
+      text-align: center;
+      padding: 1rem;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #007bff;
+      display: block;
+    }
+    .stat-label {
+      color: #6c757d;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    .urls-list {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .url-item {
+      padding: 1.5rem;
+      border-bottom: 1px solid #dee2e6;
+      transition: background-color 0.2s;
+    }
+    .url-item:hover {
+      background-color: #f8f9fa;
+    }
+    .url-item:last-child {
+      border-bottom: none;
+    }
+    .url-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .short-url {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .short-url:hover {
+      text-decoration: underline;
+    }
+    .click-count {
+      background-color: #007bff;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+    .long-url {
+      word-break: break-all;
+      color: #495057;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      background-color: #f8f9fa;
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .created-at {
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #6c757d;
+    }
+    .empty-state h3 {
+      margin-bottom: 1rem;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #6c757d;
+    }
+    .error {
+      text-align: center;
+      padding: 2rem;
+      color: #dc3545;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-radius: 4px;
+      margin: 1rem;
+    }
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 1rem;
+      }
+      .stats-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+      .url-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .summary-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 URL Statistics</h1>
+      <p>Track the performance of your shortened URLs</p>
+      <div class="nav-links">
+        <a href="/" class="nav-link">🏠 Home</a>
+        <a href="#" class="nav-link secondary" onclick="location.reload()">🔄 Refresh</a>
+      </div>
+    </div>
+    
+    <div class="stats-container">
+      <div class="stats-header">
+        <h2>Overview</h2>
+        <button class="refresh-btn" onclick="loadStats()">Refresh Data</button>
+      </div>
+      
+      <div class="summary-stats" id="summaryStats">
+        <div class="stat-card">
+          <span class="stat-number" id="totalUrls">-</span>
+          <div class="stat-label">Total URLs</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="totalClicks">-</span>
+          <div class="stat-label">Total Clicks</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="avgClicks">-</span>
+          <div class="stat-label">Avg Clicks/URL</div>
+        </div>
+      </div>
+      
+      <div class="urls-list" id="urlsList">
+        <div class="loading">Loading statistics...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load stats when page loads
+    window.addEventListener('load', loadStats);
+
+    async function loadStats() {
+      try {
+        const loadingDiv = document.getElementById("urlsList");
+        loadingDiv.innerHTML = '<div class="loading">Loading statistics...</div>';
+        
+        const res = await fetch("/api/url/stats");
+        const urls = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(urls.error || 'Failed to fetch statistics');
+        }
+        
+        // Update summary stats
+        updateSummaryStats(urls);
+        
+        // Update URLs list
+        updateUrlsList(urls);
+        
+      } catch (error) {
+        console.error('Error loading stats:', error);
+        document.getElementById("urlsList").innerHTML = 
+          `<div class="error">Error loading statistics: ${error.message}</div>`;
+        
+        // Reset summary stats
+        document.getElementById("totalUrls").textContent = "Error";
+        document.getElementById("totalClicks").textContent = "Error";
+        document.getElementById("avgClicks").textContent = "Error";
+      }
+    }
+
+    function updateSummaryStats(urls) {
+      const totalUrls = urls.length;
+      const totalClicks = urls.reduce((sum, url) => sum + url.clicks, 0);
+      const avgClicks = totalUrls > 0 ? (totalClicks / totalUrls).toFixed(1) : 0;
+      
+      document.getElementById("totalUrls").textContent = totalUrls.toLocaleString();
+      document.getElementById("totalClicks").textContent = totalClicks.toLocaleString();
+      document.getElementById("avgClicks").textContent = avgClicks;
+    }
+
+    function updateUrlsList(urls) {
+      const urlsListDiv = document.getElementById("urlsList");
+      
+      if (urls.length === 0) {
+        urlsListDiv.innerHTML = `
+          <div class="empty-state">
+            <h3>No URLs found</h3>
+            <p>Start by creating your first shortened URL!</p>
+            <a href="/" class="nav-link">Create URL</a>
+          </div>
+        `;
+        return;
+      }
+      
+      const urlsHtml = urls.map(url => `
+        <div class="url-item">
+          <div class="url-header">
+            <a href="/${url.shortCode}" target="_blank" class="short-url">
+              ${window.location.origin}/${url.shortCode}
+            </a>
+            <span class="click-count">${url.clicks.toLocaleString()} clicks</span>
+          </div>
+          <div class="long-url">${escapeHtml(url.longUrl)}</div>
+          <div class="created-at">
+            Created: ${new Date(url.createdAt).toLocaleString()}
+            ${url.clicks > 0 ? `• Last click tracked` : '• No clicks yet'}
+          </div>
+        </div>
+      `).join('');
+      
+      urlsListDiv.innerHTML = urlsHtml;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadStats, 30000);
+  </script>
+</body>
+</html>

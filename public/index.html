@@ -6,138 +6,129 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 2rem;
+      margin: 0;
+      padding: 2rem;
       display: flex;
       flex-direction: column;
       align-items: center;
+      min-height: 100vh;
+      background-color: #f8f9fa;
     }
     .container {
-      max-width: 800px;
+      max-width: 600px;
       width: 100%;
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 1.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
     }
     form {
       display: flex;
       gap: 10px;
-      margin-bottom: 30px;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
+      margin-bottom: 2rem;
     }
     input[type="url"] {
       flex: 1;
-      min-width: 300px;
+      padding: 15px;
+      font-size: 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 6px;
+      outline: none;
+    }
+    input[type="url"]:focus {
+      border-color: #007bff;
     }
     button {
+      padding: 15px 30px;
+      font-size: 16px;
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
+      white-space: nowrap;
     }
     button:hover {
       background-color: #0056b3;
     }
     #result {
-      margin-bottom: 30px;
-      padding: 15px;
-      background-color: #f8f9fa;
-      border-radius: 4px;
+      padding: 20px;
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-radius: 6px;
+      margin-bottom: 2rem;
       display: none;
-    }
-    .stats-container {
-      width: 100%;
-    }
-    .stats-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    .refresh-btn {
-      background-color: #28a745;
-      padding: 8px 15px;
-      font-size: 14px;
-    }
-    .refresh-btn:hover {
-      background-color: #218838;
-    }
-    .url-item {
-      background: white;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 10px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .url-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .url-stats {
-      font-size: 14px;
-      color: #6c757d;
-    }
-    .click-count {
-      background-color: #007bff;
-      color: white;
-      padding: 4px 12px;
-      border-radius: 15px;
-      font-size: 12px;
-      font-weight: bold;
     }
     .short-url {
       color: #007bff;
       text-decoration: none;
       font-weight: bold;
+      font-size: 18px;
+      word-break: break-all;
     }
     .short-url:hover {
       text-decoration: underline;
     }
-    .long-url {
-      word-break: break-all;
-      color: #6c757d;
-      font-size: 14px;
+    .stats-link {
+      margin-top: 2rem;
+      padding: 15px 25px;
+      background-color: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      display: inline-block;
+      transition: background-color 0.2s;
     }
-    .created-at {
-      font-size: 12px;
-      color: #868e96;
+    .stats-link:hover {
+      background-color: #218838;
+      text-decoration: none;
+      color: white;
     }
-    a {
-      color: #007bff;
+    .error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+    @media (max-width: 600px) {
+      form {
+        flex-direction: column;
+      }
+      input[type="url"] {
+        margin-bottom: 10px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>URL Shortener</h1>
+    <p>Transform your long URLs into short, shareable links</p>
+    
     <form id="urlForm">
-      <input type="url" id="longUrl" placeholder="Enter long URL" required />
-      <button type="submit">Shorten</button>
+      <input type="url" id="longUrl" placeholder="Enter your long URL here..." required />
+      <button type="submit">Shorten URL</button>
     </form>
+    
     <div id="result"></div>
     
-    <div class="stats-container">
-      <div class="stats-header">
-        <h2>URL Statistics</h2>
-        <button class="refresh-btn" onclick="loadStats()">Refresh</button>
-      </div>
-      <div id="urlStats"></div>
-    </div>
+    <a href="/stats" class="stats-link">📊 View Statistics</a>
   </div>
 
   <script>
-    // Load stats when page loads
-    window.addEventListener('load', loadStats);
-
     document.getElementById("urlForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const longUrl = document.getElementById("longUrl").value;
 
       try {
-        const res = await fetch("http://localhost:5000/api/url/shorten", {
+        const res = await fetch("/api/url/shorten", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ longUrl }),
@@ -145,55 +136,37 @@
 
         const data = await res.json();
         const resultDiv = document.getElementById("result");
-        resultDiv.innerHTML = `
-          <strong>Shortened URL:</strong> 
-          <a href="http://localhost:5000/${data.shortCode}" target="_blank" class="short-url">
-            http://localhost:5000/${data.shortCode}
-          </a>
-        `;
-        resultDiv.style.display = 'block';
         
-        // Clear the input and reload stats
-        document.getElementById("longUrl").value = '';
-        setTimeout(loadStats, 500); // Small delay to ensure database is updated
-      } catch (error) {
-        console.error('Error shortening URL:', error);
-        document.getElementById("result").innerHTML = '<strong style="color: red;">Error shortening URL</strong>';
-        document.getElementById("result").style.display = 'block';
-      }
-    });
-
-    async function loadStats() {
-      try {
-        const res = await fetch("http://localhost:5000/api/url/stats");
-        const urls = await res.json();
-        
-        const statsDiv = document.getElementById("urlStats");
-        
-        if (urls.length === 0) {
-          statsDiv.innerHTML = '<p style="text-align: center; color: #6c757d;">No URLs found. Create your first shortened URL!</p>';
-          return;
+        if (res.ok) {
+          resultDiv.innerHTML = `
+            <div>
+              <p><strong>Your shortened URL:</strong></p>
+              <a href="/${data.shortCode}" target="_blank" class="short-url">
+                ${window.location.origin}/${data.shortCode}
+              </a>
+              <p style="margin-top: 15px; font-size: 14px; color: #6c757d;">
+                Click the link to test it, or copy and share it anywhere!
+              </p>
+            </div>
+          `;
+          resultDiv.className = '';
+        } else {
+          resultDiv.innerHTML = `<strong>Error:</strong> ${data.error || 'Failed to shorten URL'}`;
+          resultDiv.className = 'error';
         }
         
-        const statsHtml = urls.map(url => `
-          <div class="url-item">
-            <div class="url-header">
-              <a href="http://localhost:5000/${url.shortCode}" target="_blank" class="short-url">
-                http://localhost:5000/${url.shortCode}
-              </a>
-              <span class="click-count">${url.clicks} clicks</span>
-            </div>
-            <div class="long-url">${url.longUrl}</div>
-            <div class="created-at">Created: ${new Date(url.createdAt).toLocaleString()}</div>
-          </div>
-        `).join('');
+        resultDiv.style.display = 'block';
         
-        statsDiv.innerHTML = statsHtml;
+        // Clear the input
+        document.getElementById("longUrl").value = '';
       } catch (error) {
-        console.error('Error loading stats:', error);
-        document.getElementById("urlStats").innerHTML = '<p style="color: red;">Error loading statistics</p>';
+        console.error('Error shortening URL:', error);
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = '<strong>Error:</strong> Failed to connect to server';
+        resultDiv.className = 'error';
+        resultDiv.style.display = 'block';
       }
-    }
+    });
   </script>
 </body>
 </html>
