@@ -2,6 +2,9 @@
 
 A modern, full-stack URL shortener application with click tracking analytics, built with Node.js, Express, PostgreSQL, and vanilla JavaScript.
 
+Here’s how it looks:
+![Demo](./assets/demo.gif)
+
 ## ✨ Features
 
 - 🎯 **URL Shortening**: Convert long URLs into short, shareable links
